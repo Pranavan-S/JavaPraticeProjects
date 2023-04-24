@@ -1,0 +1,269 @@
+import java.util.*;
+class Client{
+	private int clientId;
+	private String name;
+	private String nationality;
+	private String occupation;
+	private String address;
+	private int age;
+	private String gender;
+	private int pin;
+	private ArrayList<Account> accounts;
+	
+	Client(int clientId, String name, String nationality, String occupation, String address, int age, String gender, int pin){
+		this.clientId = clientId;
+		this.name = name;
+		this.nationality = nationality;
+		this.occupation = occupation;
+		this.address = address;
+		this.age = age;
+		this.gender = gender;
+		this.pin = pin;
+		this.accounts = new ArrayList<Account>();
+		
+	}
+	public int getPin() {
+		return this.pin;
+	}
+	public String getName() {
+		return this.name;
+	}
+	public int getClientId() {
+		return this.clientId;
+	}
+	public void addAccount(Account account) {
+		this.accounts.add(account);
+	}
+	public ArrayList<Account> getAccounts(){
+		return accounts;
+	}
+}
+
+
+abstract class Account{
+	private int accountId;
+	private static String currency;
+	private String branch;
+	protected double balance;
+	
+	Account(int accountId, String currency, String branch){
+		this.accountId = accountId;
+		this.currency = currency;
+		this.branch = branch;
+	}
+	public int getAccountId() {
+		return this.accountId;
+	}
+	public static String getCurrency() {
+		return currency;
+	}
+	public double getBalance() {
+		return this.balance;
+	}
+	public double deposit(double amount) {
+		balance += amount;
+		return balance;
+	}
+	public double withdraw(double amount) {
+		if (amount <= this.balance) {
+			balance -= amount;
+		}
+		else {
+			System.out.println("Insufficient Balance.");
+		}
+		return this.balance;
+	}
+}
+
+class SavingsAccount extends Account{
+	double interestRate;
+	SavingsAccount(int accountId, String currency, String branch, double interestRate){
+		super(accountId, currency, branch);
+		this.interestRate = interestRate;
+	}
+	public double addInterest() {
+		balance += (this.interestRate*0.01*this.balance);
+		return this.balance;
+	}
+}
+
+class CurrentAccount extends Account{
+	CurrentAccount(int accountId, String currency, String branch){
+		super(accountId, currency, branch);
+	}
+}
+
+
+class Loan{
+	private double amount;
+	private double interestRate;
+	private double duration;
+	private String paymentMethod;
+	private Account account;
+	
+	Loan(double amount, double interestRate, double duration, String paymentMethod, Account account) {
+		this.amount = amount;
+		this.interestRate = interestRate;
+		this.duration = duration;
+		this.paymentMethod = paymentMethod;
+		this.account = account;
+	}
+}
+
+
+class Transaction{
+	private int transactionId;
+	private int accountId;
+	private String date;
+	private String status;
+	Transaction(int transactionId, int accountId, String date, String status) {
+		this.transactionId = transactionId;
+		this.accountId = accountId;
+		this.date = date;
+		this.status = status;
+	}
+	public int getTransactionId() {
+		return transactionId;
+	}
+	public int getAccountId() {
+		return accountId;
+	}
+	public String getDate() {
+		return date;
+	}
+	public String getStatus() {
+		return status;
+	}
+	
+}
+
+
+class ATM{
+	private ArrayList<Client> clients = Bank.getClients();
+	ATM(){
+		System.out.println("Welcome!");
+	}
+	public void operateATM() {
+		Scanner eye = new Scanner(System.in);
+		//requesting client's ID
+		System.out.print("Enter Your ClientId: ");
+		int clientId = eye.nextInt();
+		
+		//catch the client with above clientID
+		Client user = null;
+		for (Client client:clients) {
+			if (client.getClientId()==clientId) {
+				user = client;
+				break;
+			}
+		}
+		
+		//Ask PIN number for security verification.
+		System.out.print("Enter Your PIN: ");
+		int pin = eye.nextInt();
+		
+		//correct pin number.
+		if (user.getPin()==pin) {
+			
+			//account selection process.
+			for (Account account: user.getAccounts()) {
+				System.out.println("Account ID: "+account.getAccountId());
+			}
+			System.out.print("Enter Account ID: ");
+			int accID = eye.nextInt();
+			Account accountInProcess;
+			
+			//picking the required account
+			for (Account account: user.getAccounts()) {
+				if (account.getAccountId()== accID) {
+					accountInProcess = account;
+					//operation selection.
+					System.out.println("1. View Balance.\n"+ "2. Withdraw money.\n"+ "3. Deposit money.\n"+ "4. Exit.");
+					System.out.print("Enter your selection: ");
+					int option = eye.nextInt();
+					if (option == 1) {
+						System.out.println("CurrentBalance is: "+accountInProcess.getBalance());
+					}
+					else if (option==2 || option==3) {
+						System.out.print("Enter the amount: ");
+						double amount = eye.nextDouble();
+						if (option==2) {
+							account.withdraw(amount);
+							System.out.println("Current Balance is: "+ account.getBalance());
+						}
+						else {
+							account.deposit(amount);
+							System.out.println("Current Balance is: "+ account.getBalance());
+						}
+					}
+					else {
+						System.out.println("Thank You for Banking With Us.");
+						return;
+					}
+					break;
+				}
+			}			
+		}
+		//wrong pin number.
+		else {
+			System.out.println("Invalid Pin!");
+			return;
+		}
+	}
+}
+
+
+class Bank{
+	//this array list can be connected with databases during next level developments.
+	private static ArrayList<Client> clients;
+	Bank(){
+		clients = new ArrayList<>();
+	}
+	public static ArrayList<Client> getClients() {
+		return clients;
+	}
+	public static void addClients(Client client) {
+		clients.add(client);
+	}
+}
+
+
+
+public class ATMTest {
+	public static void main(String args[]) {
+		//initializing required elements.
+		
+		//initialize accounts
+		SavingsAccount mySavAcc1 = new SavingsAccount(10000, "LKR", "Colombo",7.56);
+		CurrentAccount myCurrAcc1 = new CurrentAccount(10001, "LKR", "Colombo");
+		
+		//initialize client 1
+		Client client1 = new Client(1000, "Vinton", "SriLankan", "Computer Scientist", "Colombo", 56, "Male", 129845);
+		//adding account details
+		client1.addAccount(mySavAcc1);
+		client1.addAccount(myCurrAcc1);
+		
+		//initializing bank accounts for client2
+		SavingsAccount mySavAcc2 = new SavingsAccount(10010, "LKR", "Galle",12.45);
+		CurrentAccount myCurrAcc2 = new CurrentAccount(10011, "LKR", "Galle");
+		
+		//initializing client2
+		Client client2 = new Client(1001, "Khan", "SriLankan", "Teacher", "Galle", 25, "Male", 129855);
+		//adding account details
+		client2.addAccount(mySavAcc2);
+		client2.addAccount(myCurrAcc2);
+		
+		//initialize bank objects
+		Bank ABC_Bank = new Bank();
+		
+		//adding clients to the bank
+		ABC_Bank.addClients(client1);
+		ABC_Bank.addClients(client2);
+		
+		
+		
+		//this is the checking step of this code.		
+		ATM abcATM = new ATM();
+		abcATM.operateATM();
+	}
+}
